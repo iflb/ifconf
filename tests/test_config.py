@@ -4,6 +4,9 @@
 
 import unittest
 from pathlib import Path
+from collections import namedtuple
+from recordclass import recordclass
+
 
 from ifconf import configure_main, clear_main_cofig, configure_module
 import model
@@ -23,6 +26,8 @@ class TestConfigureModule(unittest.TestCase):
         self.assertEqual(server.val_d, {'a':1,'b':2,'c':3})
         self.assertEqual(server.val_l, [1,2,3])
         self.assertEqual(server.home, Path('..'))
+        with self.assertRaises(AttributeError):
+            self.conf.addr = '1.2.3.4' # not editable
 
     def test_file_path_value_load(self):
         configure_main(config_path=['test.ini'], config_arg=None)
@@ -34,6 +39,8 @@ class TestConfigureModule(unittest.TestCase):
         self.assertEqual(server.val_d, {'a':10,'b':20,'c':30})
         self.assertEqual(server.val_l, [1,2,3,4,5,6])
         self.assertEqual(server.home, Path('../../..'))
+        with self.assertRaises(AttributeError):
+            self.conf.addr = '1.2.3.4' # not editable
 
     def test_file_arg_value_load(self):
         configure_main(config_arg='test.ini')
@@ -45,10 +52,22 @@ class TestConfigureModule(unittest.TestCase):
         self.assertEqual(server.val_d, {'a':10,'b':20,'c':30})
         self.assertEqual(server.val_l, [1,2,3,4,5,6])
         self.assertEqual(server.home, Path('../../..'))
+        with self.assertRaises(AttributeError):
+            self.conf.addr = '1.2.3.4' # not editable
+
+    def test_default_value_load_mutable(self):
+        configure_main(with_config_logging = False)
+        server = model.Database()
+        self.assertEqual(server.addr, '127.0.0.1')
+        self.assertEqual(server.port, 3306)
+        server.addr = '192.168.0.1'
+        server.port = 8888
+        self.assertEqual(server.addr, '192.168.0.1')
+        self.assertEqual(server.port, 8888)
 
     def test_no_main_config(self):
         with self.assertRaises(RuntimeError):
-            configure_module(model.configure)
+            configure_module(model.server)
 
 if __name__ == '__main__':
     unittest.main()

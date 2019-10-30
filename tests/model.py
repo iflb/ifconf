@@ -1,8 +1,9 @@
 
+
 from ifconf import configure_module, config_callback
 
-@config_callback(section='server')
-def configure(loader):
+@config_callback
+def server(loader):
     loader.add_attr('server_addr', '0.0.0.0', help='server inet addr to bind')
     loader.add_attr_int('server_port', 8080, help='server inet port to bind')
     loader.add_attr_boolean('udp', False, help='True if use UDP otherwise TCP is used.')
@@ -14,7 +15,7 @@ def configure(loader):
 class Server:
 
     def __init__(self, conf = None):
-        self.conf = configure_module(configure, conf)
+        self.conf = configure_module(server, conf)
 
     @property 
     def addr(self):
@@ -45,4 +46,31 @@ class Server:
         return self.conf.home
 
     
+    
+@config_callback(section='database')
+def conf_database(loader):
+    loader.add_attr('service_addr', '127.0.0.1', help='database server inet addr to connect')
+    loader.add_attr_int('service_port', 3306, help='server inet port to connect')
+    loader.add_attr('test', 'value', help='test value')
+
+class Database:
+
+    def __init__(self, conf = None):
+        self.conf = configure_module(conf_database, conf, immutable=False)
+
+    @property 
+    def addr(self):
+        return self.conf.service_addr
+
+    @addr.setter
+    def addr(self, addr):
+        self.conf.service_addr = addr
+
+    @property 
+    def port(self):
+        return self.conf.service_port
+
+    @port.setter
+    def port(self, port):
+        self.conf.service_port = port
 

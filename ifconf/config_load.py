@@ -9,7 +9,8 @@ import logging
 from ifconf.config import Config
 
 from ifconf.config_print import PrintConfigAction
-from ifconf.config_logging import configure_logging
+from ifconf.config_common import configure_logging
+from ifconf.config_common import get_module_name_for
 
 __MAIN_CONFIG__ = None
 
@@ -17,16 +18,13 @@ def config_callback(section = None):
     def _decorator(func):
         if hasattr(func, '__SECTION__'):
             return func
-        if func.__module__  == '__main__':
-            try:
-                func.__MODULE_NAME__ = os.path.splitext(os.path.basename(sys.modules['__main__'].__file__))[0]
-            except:
-                func.__MODULE_NAME__ = os.path.splitext(os.path.basename(sys.executable))[0]
-        else:
-            func.__MODULE_NAME__ = func.__module__
-        func.__SECTION__ = '_'.join((func.__MODULE_NAME__, str(section) if section else func.__name__))
+        func.__MODULE_NAME__ = get_module_name_for(func)
+        func.__SECTION__ = '_'.join((func.__MODULE_NAME__, section if type(section) == str and section else func.__name__))
         return func
-    return _decorator
+    if callable(section):
+        return _decorator(section)
+    else:
+        return _decorator
 
 def configure_main(argparser = None
                    , with_default_args = True
@@ -44,10 +42,12 @@ def configure_main(argparser = None
     __MAIN_CONFIG__.parse(config_path)
     if with_config_logging:
         configure_logging(__MAIN_CONFIG__)
+    else:
+        __MAIN_CONFIG__.logger = logging.getLogger()
     for m in callback_methods:
         loader = ConfigLoader.load(m, __MAIN_CONFIG__)
         try:
-            loader.configure()
+            loader.configure(True)
         except Exception as e:
             __MAIN_CONFIG__.err.append('モジュール[{}]の設定取得に失敗しました。エラー：{}'.format(loader.section, e))
     for e in __MAIN_CONFIG__.err:
@@ -125,12 +125,14 @@ class ConfigLoader:
         assert config is not None, 'config cannot be null.'
         assert type(config) is Config, 'invalid config type:[{}]'.format(type(config))
         self.section = section
+        self.module_name = module_name
         self.main_config = config
         self.names = ['main_config', 'logger']
         self.values = [lambda config: config, lambda config: logging.getLogger(module_name)]
 
     def configure(self, immutable):
         assert self.main_config is not None, 'main_config cannot be null.'
+        #ntp = namedtuple(self.section.replace('.','_'), self.names, module = self.module_name) if immutable else recordclass(self.section.replace('.','_'), self.names, module = self.module_name) 
         ntp = namedtuple(self.section.replace('.','_'), self.names) if immutable else recordclass(self.section.replace('.','_'), self.names) 
         args = [f(self.main_config) for f in self.values]
         conf = ntp(*args)

@@ -32,6 +32,7 @@ def configure_logging(conf
         logging.config.fileConfig(conf.parser)
         conf.logger = logging.getLogger()
     elif conf.parser.has_section('logging'):
+        #logging.config.dictConfig({'disable_existing_loggers' : True})
         section = conf.parser['logging']
         conf.verbose = section.get('verbose', conf.verbose)
         conf.log_level_name = section.get('level', 'INFO')
@@ -46,6 +47,7 @@ def configure_logging(conf
     else:
         conf.logger = load_logging(conf)
 
+
 def load_logging(conf, name=None):
     if name:
         logger = logging.getLogger(name)
@@ -53,30 +55,31 @@ def load_logging(conf, name=None):
         logger = logging.getLogger()
     logger.setLevel(conf.log_level)
 
-    if hasattr(conf.args, 'debug') and conf.args.debug:
+
+    if hasattr(conf, 'debug') and conf.debug:
         handler = logging.StreamHandler()
         handler.setFormatter(conf.formatter)
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
         logger.setLevel(logging.DEBUG)
             
-    if hasattr(conf.args, 'debug_file') and conf.args.debug_file:
+    if hasattr(conf, 'debug_file') and conf.debug_file:
         try:
-            handler = FileHandler(conf.args.debug_file, encoding = conf.log_encoding)
+            handler = FileHandler(conf.debug_file, encoding = conf.log_encoding)
             handler.setFormatter(conf.formatter)
             handler.setLevel(logging.DEBUG)
             logger.addHandler(handler)
             logger.setLevel(logging.DEBUG)
         except Exception as e:
-            conf.err.append('DEBUG FILEログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.args.debug_file, e))
-    if hasattr(conf.args, 'log_file') and conf.log_file:
+            conf.err.append('DEBUG FILEログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.debug_file, e))
+    if hasattr(conf, 'log_file') and conf.log_file:
         try:
             handler = RotatingFileHandler(conf.log_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
             handler.setFormatter(conf.formatter)
             logger.addHandler(handler)
         except Exception as e:
             conf.err.append('ログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.log_file, e))
-    if hasattr(conf.args, 'err_file') and conf.err_file != conf.log_file:
+    if hasattr(conf, 'err_file') and conf.err_file and conf.err_file != conf.log_file:
         try:
             handler = RotatingFileHandler(conf.err_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
             handler.setFormatter(conf.formatter)
@@ -104,4 +107,15 @@ def load_logging(conf, name=None):
         logger.warning("ログ設定が有効になりました。WARNINGログが出力されます。")
         
     return logger
+
+def get_module_name_for(obj):
+    if obj.__module__  == '__main__':
+        try:
+            return os.path.splitext(os.path.basename(sys.modules['__main__'].__file__))[0]
+        except:
+            return os.path.splitext(os.path.basename(sys.executable))[0]
+    else:
+        return obj.__module__
+    
+    
 
