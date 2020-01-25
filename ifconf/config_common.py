@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler
@@ -29,10 +32,10 @@ def configure_logging(conf
     conf.formatter = logging.Formatter(fmt)
 
     if [s for s in ('loggers', 'handlers', 'formatters') if conf.parser.has_section(s)]:
-        logging.config.fileConfig(conf.parser)
+        logging.config.fileConfig(conf.parser, disable_existing_loggers=False)
         conf.logger = logging.getLogger()
     elif conf.parser.has_section('logging'):
-        #logging.config.dictConfig({'disable_existing_loggers' : True})
+        logging.config.dictConfig({'version': 1, 'disable_existing_loggers' : False})
         section = conf.parser['logging']
         conf.verbose = section.get('verbose', conf.verbose)
         conf.log_level_name = section.get('level', 'INFO')

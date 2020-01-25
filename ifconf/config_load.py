@@ -12,6 +12,8 @@ from ifconf.config_print import PrintConfigAction
 from ifconf.config_common import configure_logging
 from ifconf.config_common import get_module_name_for
 
+from functools import reduce
+
 __MAIN_CONFIG__ = None
 
 def config_callback(section = None):
@@ -19,7 +21,8 @@ def config_callback(section = None):
         if hasattr(func, '__SECTION__'):
             return func
         func.__MODULE_NAME__ = get_module_name_for(func)
-        func.__SECTION__ = '_'.join((func.__MODULE_NAME__, section if type(section) == str and section else func.__name__))
+        #func.__SECTION__ = '_'.join((func.__MODULE_NAME__, section if type(section) == str and section else func.__name__))
+        func.__SECTION__ = section if type(section) == str and section else '{}_{}'.format(func.__MODULE_NAME__, func.__name__)
         return func
     if callable(section):
         return _decorator(section)
@@ -68,17 +71,17 @@ def configure_module(callback_methods
                      , config = None
                      , immutable = True):
     if config:
-        config = config
+        pass
     elif __MAIN_CONFIG__:
         config = __MAIN_CONFIG__
     else:
         raise RuntimeError('Main configuration must be done before calling configure_module.')
-    if hasattr(callback_methods, '__iter__'):
-        return [ConfigLoader.load(config_callback()(callback), config).configure(immutable) for callback in callback_methods]
+
+    if type(callback_methods) != str and hasattr(callback_methods, '__iter__'):
+        loaders = [ConfigLoader.load(config_callback()(callback), config) for callback in callback_methods]
+        return reduce(lambda a,b: a.append_name_values(b), loaders).configure(immutable)
     else:
         return ConfigLoader.load(config_callback()(callback_methods), config).configure(immutable)
-
-
 
 def add_default_argument(argparser, config_path = None):
     if config_path is not None:
@@ -118,7 +121,7 @@ class ConfigLoader:
         loader = ConfigLoader(callback_method.__SECTION__, callback_method.__MODULE_NAME__, config)
         callback_method(loader)
         return loader
-        
+
     def __init__(self, section, module_name, config):
         assert section is not None, 'section cannot be null.'
         assert module_name is not None, 'module_name cannot be null.'
@@ -127,16 +130,28 @@ class ConfigLoader:
         self.section = section
         self.module_name = module_name
         self.main_config = config
-        self.names = ['main_config', 'logger']
-        self.values = [lambda config: config, lambda config: logging.getLogger(module_name)]
+        self.names = []
+        self.values = []
+        #self.names = ['main_config', 'logger']
+        #self.values = [lambda config: config, lambda config: logging.getLogger(module_name)]
+
+    def append_name_values(self, loader):
+        assert loader is not None, 'configloader ancestor cannot be null.'
+        for name, value in zip(loader.names, loader.values):
+            while name in self.names:
+                name = '_' + name
+            self.names.append(name)
+            self.vlaues.append(vlaue)
+        return self
 
     def configure(self, immutable):
         assert self.main_config is not None, 'main_config cannot be null.'
-        #ntp = namedtuple(self.section.replace('.','_'), self.names, module = self.module_name) if immutable else recordclass(self.section.replace('.','_'), self.names, module = self.module_name) 
+        #ntp = namedtuple(self.section.replace('.','_'), self.names, module = self.module_name) if immutable else recordclass(self.section.replace('.','_'), self.names, module = self.module_name)
         ntp = namedtuple(self.section.replace('.','_'), self.names) if immutable else recordclass(self.section.replace('.','_'), self.names) 
         args = [f(self.main_config) for f in self.values]
         conf = ntp(*args)
-        conf.logger.debug(conf)
+        #conf.logger.debug(conf)
+        __MAIN_CONFIG__.logger.debug(conf)
         return conf
 
     def add_attr(self, name, default=None, required=False, help=''):

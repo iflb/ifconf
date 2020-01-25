@@ -7,6 +7,8 @@ from pathlib import Path
 from collections import namedtuple
 from recordclass import recordclass
 
+import sys
+sys.path.append('..')
 
 from ifconf import configure_main, clear_main_cofig, configure_module
 import model
@@ -41,6 +43,34 @@ class TestConfigureModule(unittest.TestCase):
         self.assertEqual(server.home, Path('../../..'))
         with self.assertRaises(AttributeError):
             self.conf.addr = '1.2.3.4' # not editable
+
+    def test_file_path_value_load_with_two_files(self):
+        configure_main(config_path=['test.ini', 'test2.ini'], config_arg=None)
+        server = model.Server()
+        self.assertEqual(server.addr, '127.0.0.1')
+        self.assertEqual(server.port, 80)
+        self.assertEqual(server.udp, True)
+        self.assertEqual(server.val_f, 0.5)
+        self.assertEqual(server.val_d, {'a':10,'b':20,'c':30})
+        self.assertEqual(server.val_l, [1,2,3,4,5,6])
+        self.assertEqual(server.home, Path('../../..'))
+        with self.assertRaises(AttributeError):
+            self.conf.addr = '1.2.3.4' # not editable
+        server = model.Database()
+        self.assertEqual(server.addr, '192.168.0.1')
+        self.assertEqual(server.port, 3333)
+
+    def test_file_path_value_load_test2(self):
+        configure_main(config_path='test2.ini', config_arg=None)
+        server = model.Database()
+        self.assertEqual(server.addr, '192.168.0.1')
+        self.assertEqual(server.port, 3333)
+
+    def test_file_path_value_load_test3_override(self):
+        configure_main(config_path=['test3.ini', 'test2.ini'], config_arg=None)
+        server = model.Database()
+        self.assertEqual(server.addr, '192.168.0.100')
+        self.assertEqual(server.port, 4444)
 
     def test_file_arg_value_load(self):
         configure_main(config_arg='test.ini')

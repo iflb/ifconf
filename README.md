@@ -19,7 +19,7 @@ Designed for the following purposes.
         
         from ifconf import configure_module, config_callback
         
-        @config_callback(section='server')
+        @config_callback
         def conf(loader):
             loader.add_attr('server_addr', '0.0.0.0', help='server inet addr to bind')
                 loader.add_attr_int('server_port', 8080, help='server inet port to bind')
@@ -49,6 +49,15 @@ You can print config.ini template
 
         python -m ifconf server.config
 
+## Install
+
+You can install this package by pip
+
+        pip3 install ifconf
+
+If you got an error such as 'error: command 'x86_64-linux-gnu-gcc' failed with exit status 1', you need to install build essentials.
+
+        sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
 
 ----
 

@@ -31,13 +31,14 @@ class Config:
                 os.chdir(self.args.current_dir)
 
         if config_path:
-            if hasattr(config_path, '__iter__'):
+            if type(config_path) != str and hasattr(config_path, '__iter__'):
                 for p in config_path:
                     self.config_path.append(p)
             else:
                 self.config_path.append(config_path)
+                
 
-        for p in self.config_path:
+        for p in reversed(self.config_path):
             if os.path.exists(p):
                 try:
                     with open(p, "r") as f:
