@@ -5,11 +5,10 @@
 # https://qiita.com/shinichi-takii/items/e90dcf7550ef13b047b5
 
 # before install
-# ??? pip3 install readme-md
-# pip3 install readme_renderer[md]
-# python3 -m pip install --user --upgrade twine
+# ##python3 -m pip install --user --upgrade twine
+# pip3 install wheel readme_renderer[md] twine readme-md
 
-rm -rf ifconf.egg-info/* dist/*
+rm -rf ducts.egg-info/* dist/*
 python3 setup.py sdist bdist_wheel
 python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 

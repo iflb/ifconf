@@ -14,8 +14,8 @@ def server(loader):
 
 class Server:
 
-    def __init__(self, conf = None):
-        self.conf = configure_module(server, conf)
+    def __init__(self, override = None):
+        self.conf = configure_module(server, override=override)
 
     @property 
     def addr(self):
@@ -55,8 +55,8 @@ def conf_database(loader):
 
 class Database:
 
-    def __init__(self, conf = None):
-        self.conf = configure_module(conf_database, conf, immutable=False)
+    def __init__(self, override={}, immutable = True):
+        self.conf = configure_module(conf_database, override=override, immutable=immutable)
 
     @property 
     def addr(self):

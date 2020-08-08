@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler
@@ -11,9 +8,13 @@ logging.NOTICE = 25
 logging.NOTICE_LEVEL_NAME = "NOTICE"
 
 logging.addLevelName(logging.NOTICE, logging.NOTICE_LEVEL_NAME)
+
 def notice(self, message, *args, **kws):
-    self._log(logging.NOTICE, message, args, **kws) 
+    self._log(logging.NOTICE, message, args, **kws)
+    
 logging.Logger.notice = notice
+
+
 
 def configure_logging(conf
                       , log_level=logging.INFO
@@ -34,18 +35,18 @@ def configure_logging(conf
     if [s for s in ('loggers', 'handlers', 'formatters') if conf.parser.has_section(s)]:
         logging.config.fileConfig(conf.parser, disable_existing_loggers=False)
         conf.logger = logging.getLogger()
-    elif conf.parser.has_section('logging'):
+    elif conf.parser.has_option('ifconf', 'logging') and conf.parser.getboolean('ifconf', 'logging'):
         logging.config.dictConfig({'version': 1, 'disable_existing_loggers' : False})
-        section = conf.parser['logging']
+        section = conf.parser['ifconf']
         conf.verbose = section.get('verbose', conf.verbose)
-        conf.log_level_name = section.get('level', 'INFO')
+        conf.log_level_name = section.get('log_level', 'INFO')
         conf.log_level = getattr(logging, conf.log_level_name.upper(), conf.log_level)
         conf.log_file = section.get('log_file', conf.log_file)
         conf.err_file = section.get('err_file', '')
-        conf.log_encoding = section.get('encoding', conf.log_encoding)
-        bytes_str = section.get("max_bytes", '').replace('(','').replace(')','').replace('=','')
+        conf.log_encoding = section.get('log_encoding', conf.log_encoding)
+        bytes_str = section.get("log_max_bytes", '').replace('(','').replace(')','').replace('=','')
         conf.log_max_bytes = eval(bytes_str) if bytes_str else conf.log_max_bytes
-        conf.log_backup_count = int(section.get('backup_count', conf.log_backup_count))
+        conf.log_backup_count = int(section.get('log_backup_count', conf.log_backup_count))
         conf.logger = load_logging(conf)
     else:
         conf.logger = load_logging(conf)
@@ -77,14 +78,16 @@ def load_logging(conf, name=None):
             conf.err.append('DEBUG FILEログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.debug_file, e))
     if hasattr(conf, 'log_file') and conf.log_file:
         try:
-            handler = RotatingFileHandler(conf.log_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
+            #handler = RotatingFileHandler(conf.log_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
+            handler = FileHandler(conf.log_file, encoding = conf.log_encoding)
             handler.setFormatter(conf.formatter)
             logger.addHandler(handler)
         except Exception as e:
             conf.err.append('ログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.log_file, e))
     if hasattr(conf, 'err_file') and conf.err_file and conf.err_file != conf.log_file:
         try:
-            handler = RotatingFileHandler(conf.err_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
+            #handler = RotatingFileHandler(conf.err_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
+            handler = FileHandler(conf.err_file, encoding = conf.log_encoding)
             handler.setFormatter(conf.formatter)
             handler.setLevel(logging.ERROR)
             logger.addHandler(handler)
@@ -111,14 +114,4 @@ def load_logging(conf, name=None):
         
     return logger
 
-def get_module_name_for(obj):
-    if obj.__module__  == '__main__':
-        try:
-            return os.path.splitext(os.path.basename(sys.modules['__main__'].__file__))[0]
-        except:
-            return os.path.splitext(os.path.basename(sys.executable))[0]
-    else:
-        return obj.__module__
-    
-    
 

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import sys
 import os
 import os.path
-
+import inspect
 import json
 
 from pathlib import Path
@@ -20,11 +19,12 @@ class Config:
         
     def parse(self, config_path = None):
         self.args = self.argparser.parse_args()
+        self.args_dict = {v[0]:v[1] for v in inspect.getmembers(self.args) if not (callable(v[0]) or v[0].startswith('_'))}
         self.config_path = []
         
         if hasattr(self.args, 'config') and self.args.config:
             for p in self.args.config.split(os.pathsep):
-                self.config_path.append(p)
+                self.config_path.append(p.format(**self.args_dict))
 
         if hasattr(self.args, 'current_dir') and self.args.current_dir:
             if self.args.current_dir != '.':
@@ -33,11 +33,25 @@ class Config:
         if config_path:
             if type(config_path) != str and hasattr(config_path, '__iter__'):
                 for p in config_path:
-                    self.config_path.append(p)
+                    self.config_path.append(p.format(**self.args_dict))
             else:
                 self.config_path.append(config_path)
-                
 
+        lp = configparser.ConfigParser()
+        for p in reversed(self.config_path):
+            if os.path.exists(p):
+                try:
+                    with open(p, "r") as f:
+                        lp.read_file(f)
+                except Exception as e:
+                    pass
+            else:
+                pass
+        if lp.has_section('ifconf'):
+            for path in [v[1] for v in sorted(lp['ifconf'].items(), key=lambda x: x[0]) if v[0].startswith('config_path')]:
+                if path not in self.config_path:
+                    self.config_path.append(path)
+                
         for p in reversed(self.config_path):
             if os.path.exists(p):
                 try:
@@ -84,7 +98,7 @@ class Config:
                 try:
                     return json.loads(value_string)
                 except Exception as e:
-                    raise ValueError('JSONデータのフォーマットにエラーがあります。[{}][{}][{}]'.format(section, option, value_string), e)
+                    raise ValueError('Invalid Data Format [{}]. [{}][{}][{}]'.format(e, section, option, value_string), e)
             else:
                 return default
 

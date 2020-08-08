@@ -4,7 +4,7 @@
 import argparse
 from importlib import import_module
 
-from ifconf.config_print import PrintConfigAction
+from ifconf.printconf import PrintConfigAction
 
 def main():
     parser = argparse.ArgumentParser()

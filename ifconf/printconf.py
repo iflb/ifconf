@@ -2,11 +2,11 @@
 
 import sys
 import os.path
-
+import argparse
+from pathlib import Path
 import json
 
-from pathlib import Path
-import argparse
+from .common import ConfigBuilder
 
 class PrintConfigAction(argparse.Action):
 
@@ -37,39 +37,41 @@ class PrintConfigAction(argparse.Action):
             loader = PrintConfig(callback_method.__SECTION__, sys.stdout)
             callback_method(loader)
         exit(0)
-            
-class PrintConfig:
+
+
+class PrintConfig(ConfigBuilder):
 
     def __init__(self, section, out):
         self.section = section
         self.out = out
         print(file = self.out)
-        print(file = self.out)
         print('[{}]'.format(section), file = self.out)
         print(file = self.out)
 
-    def add_attr(self, name, default=None, required=False, help=''):
-        self.print_attr(name, default, required, help, str)
+    def add_attr(self, name, default=None, required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, str)
         
-    def add_attr_boolean(self, name, default=False, required=False, help=''):
-        self.print_attr(name, default, required, help, bool)
+    def add_attr_boolean(self, name, default=False, required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, bool)
 
-    def add_attr_int(self, name, default=0, required=False, help=''):
-        self.print_attr(name, default, required, help, int)
+    def add_attr_int(self, name, default=0, required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, int)
 
-    def add_attr_float(self, name, default=0.0, required=False, help=''):
-        self.print_attr(name, default, required, help, float)
+    def add_attr_float(self, name, default=0.0, required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, float)
 
-    def add_attr_dict(self, name, default={}, required=False, help=''):
-        self.print_attr(name, default, required, help, dict, json_data=True)
+    def add_attr_dict(self, name, default={}, required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, dict, json_data=True)
         
-    def add_attr_list(self, name, default=[], required=False, help=''):
-        self.print_attr(name, default, required, help, list, json_data=True)
+    def add_attr_list(self, name, default=[], required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, list, json_data=True)
         
-    def add_attr_path(self, name, default=None, required=False, help=''):
-        self.print_attr(name, default, required, help, Path)
+    def add_attr_path(self, name, default=None, required=False, hidden=False, help=''):
+        self.print_attr(name, default, required, hidden, help, Path)
 
-    def print_attr(self, name, default, required, help, typestring, json_data=False):
+    def print_attr(self, name, default, required, hidden, help, typestring, json_data=False):
+        if hidden:
+            return
         if required:
             print('# REQUIRED', file = self.out)
         print('# {} ({})'.format(help, typestring), file = self.out)
