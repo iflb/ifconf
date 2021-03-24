@@ -58,9 +58,9 @@ class Config:
                     with open(p, "r") as f:
                         self.parser.read_file(f)
                 except Exception as e:
-                    self.err.append('設定ファイル[{}]の読み込みに失敗しました。エラー：{}'.format(p, e))
+                    self.err.append('Failed to load configuration file(s) [{}]. Error: {}'.format(p, e))
             else:
-                self.err.append('設定ファイル[{}]が見つかりません。'.format(p))
+                self.err.append('Configuration file(s) [{}] are not found.'.format(p))
 
     def get_attr(self, section, option, default='', required=False):
         if required or self.parser.has_option(section, option):

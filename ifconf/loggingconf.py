@@ -75,7 +75,7 @@ def load_logging(conf, name=None):
             logger.addHandler(handler)
             logger.setLevel(logging.DEBUG)
         except Exception as e:
-            conf.err.append('DEBUG FILEログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.debug_file, e))
+            conf.err.append('Failed to set DEBUG file. File: [{}] Error: [{}]'.format(conf.debug_file, e))
     if hasattr(conf, 'log_file') and conf.log_file:
         try:
             #handler = RotatingFileHandler(conf.log_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
@@ -83,7 +83,7 @@ def load_logging(conf, name=None):
             handler.setFormatter(conf.formatter)
             logger.addHandler(handler)
         except Exception as e:
-            conf.err.append('ログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.log_file, e))
+            conf.err.append('Failed to set LOG file. File: [{}] Error: [{}]'.format(conf.log_file, e))
     if hasattr(conf, 'err_file') and conf.err_file and conf.err_file != conf.log_file:
         try:
             #handler = RotatingFileHandler(conf.err_file, maxBytes = conf.log_max_bytes, backupCount = conf.log_backup_count, encoding = conf.log_encoding)
@@ -92,25 +92,25 @@ def load_logging(conf, name=None):
             handler.setLevel(logging.ERROR)
             logger.addHandler(handler)
         except Exception as e:
-            conf.err.append('エラーログ設定に失敗しました。ファイル：[{}] エラー：[{}]'.format(conf.err_file, e))
+            conf.err.append('Failed to set ERROR file. File: [{}] Error: [{}]'.format(conf.err_file, e))
     if len(logger.handlers) == 0:
         handler = logging.StreamHandler()
         handler.setFormatter(conf.formatter)
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
-        logger.warning("ログの出力先が標準エラー出力に設定されました。")
+        logger.warning("Set output logging as stderr output.")
         
     if conf.verbose:
         logger.setLevel(logging.DEBUG)
 
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("DEBUGモードが有効になりました。")
+        logger.debug("Enabled DEBUG mode.")
     elif logger.isEnabledFor(logging.INFO):
-        logger.info("ログ設定が有効になりました。INFOログが出力されます。")
+        logger.info("Enabled logging. Printing INFO logs.")
     elif logger.isEnabledFor(logging.NOTICE):
-        logger.notice("ログ設定が有効になりました。NOTICEログが出力されます。")
+        logger.notice("Enabled logging. Printing NOTICE logs.")
     elif logger.isEnabledFor(logging.WARN):
-        logger.warning("ログ設定が有効になりました。WARNINGログが出力されます。")
+        logger.warning("Enabled logging. Printing WARNING logs.")
         
     return logger
 

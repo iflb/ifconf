@@ -50,10 +50,10 @@ def configure_main(argparser = None
         try:
             loader.configure(True)
         except Exception as e:
-            __MAIN_CONFIG__.err.append('モジュール[{}]の設定取得に失敗しました。エラー：{}'.format(loader.section, e))
+            __MAIN_CONFIG__.err.append('Failed to load configuration for the module [{}]. Error: {}'.format(loader.section, e))
     for e in __MAIN_CONFIG__.err:
         __MAIN_CONFIG__.logger.warning(e)
-    __MAIN_CONFIG__.logger.info('設定が完了しました。設定ファイル：{}'.format(__MAIN_CONFIG__.config_path))
+    __MAIN_CONFIG__.logger.info('Completed configuration for file {}'.format(__MAIN_CONFIG__.config_path))
     return __MAIN_CONFIG__
 
 def configure_main_custom(argparser = None):
@@ -66,25 +66,25 @@ def add_default_argument(argparser, config_path = None):
         argparser.add_argument('-c', '--config'
                                , metavar='PATH'
                                , default=config_path
-                               , help='設定ファイルへのパス')
+                               , help='Configuration file path')
     argparser.add_argument('--verbose', '-v'
                            , action='count'
                            , default=False
-                           , help='詳細なデータを出力')
+                           , help='Print detailed logs')
     argparser.add_argument('--current_dir'
                            , default='.'
-                           , help='カレントディレクトリを指定して実行')
+                           , help='Specify current directory')
     argparser.add_argument('--debug'
                            , action="store_true"
                            , default=False
-                           , help='デバグモードで実行')
+                           , help='Execute in debug mode')
     argparser.add_argument('--debug_file'
                            , metavar='FILE'
-                           , help='デバグモードで実行しファイル出力')
+                           , help='Execute in debug mode to output file')
     argparser.add_argument('--print_conf'
                            , action=PrintConfigAction
                            , default=False
-                           , help='設定ファイルの内容を出力')
+                           , help='Output configuration file data')
     return argparser
 
     
